@@ -1,0 +1,25 @@
+#import "iostream.bah"
+#import "string.bah"
+#import "googleTrends.bah"
+
+main(args []cpstring) int {
+
+    //Prepare session
+    tr = GT_trendRequest{
+        hl: "en-US"
+        tz: 0
+    }
+
+    //Request the interest over time graph
+    let res = tr.interestOverTime("programmation", 0, "week", "today 12-m") else {
+        panic("empty response?")
+    }
+
+    //print every entry
+    i=0; for i < len(res.timelineData), i++ {
+        d = res.timelineData[i]
+        println(d.formattedAxisTime+" ("+d.time+"): "+intToStr(d.value[0]))
+    }
+
+    return 0
+}

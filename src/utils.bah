@@ -1,0 +1,25 @@
+//Google trends api will not work if we encode too many chars for whatever reason.
+uriPreserveChars = []char {';', '/', '?', ':', '@', '&', '=', '+', '-', '_', '$', ',', '#', '.', '!'}
+
+//This will URI encode the correct chars.
+urlEncodePreserve(s cpstring) cpstring {
+    r = []char
+    tmps = buffer 4
+
+    i=0; for i < len(s), i++ {
+        c = s[i]
+        if isAlphaNumeric(c) || c in uriPreserveChars {
+            r[len(r)] = c
+        } else {
+            r[len(r)] = '%'
+            sprintf(<ptr>tmps, "%x", c)
+            l = strlen(<ptr>tmps)
+            j=0; for j < l, j++ {
+                r[len(r)] = tmps[j]
+            }
+            
+        }
+    }
+
+    return arrToStr(r)
+}

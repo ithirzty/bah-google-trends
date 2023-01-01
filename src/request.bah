@@ -1,0 +1,120 @@
+//Wrapper used for sending requests.
+//Importants fields:
+// .tz: timezone (number representing the offset in minutes)
+// .hl: the locale language (en-US, fr-FR...)
+// .geo: the geographical zone (US, FR...)
+struct GT_trendRequest {
+    tz: int = 0 //timezone in minutes
+    hl: cpstring = "fr" //language (en-US...)
+    geo: cpstring = "FR"
+    
+    kw_list: []cpstring
+    cookies: []string //session
+    tokens: map:cpstring
+    requests: map:jsonElement*
+
+    //Used for making a new session (new cookie jar)
+    newSession() {
+        req = http_request {
+            timeout: 2
+            url: parseUrl(GT_BASE_URL+"/?geo="+this.geo)
+        }
+        resp = req.send()
+        
+        this.cookies = splitString(
+            string(splitStringBefore(string(resp.getHeader("set-cookie")), ";")),
+            "&"
+        )
+    }
+
+    //Initializer
+    _init() {
+        this.newSession()
+    }
+
+    //Used for requesting tokens
+    getTokens(tp GT_payloadTokens*) {
+        req = http_request {
+            timeout: 2
+            method: "GET"
+            url: parseUrl(GT_GENERAL_URL+"?hl="+this.hl+"&tz="+intToStr(this.tz)+"&req="+urlEncodePreserve(toJson(tp))+"&tz="+intToStr(this.tz))
+        }
+        req.setHeader("cookie", joinString(this.cookies, "; ").str())
+        req.setHeader("accept", "application/json, text/plain, */*")
+        req.setHeader("accept-language", this.hl)
+        req.setHeader("content-type", "application/json")
+        req.setHeader("Origin", "https://trends.google.com")
+        req.setHeader("Alt-Used", "trends.google.com")
+
+
+
+        resp = req.send()
+        data = parseJson(resp.body.str()[4:]).get("widgets")
+
+        i=0; for i < len(data.children), i++ {
+            id = data.children[i].get("id").str()
+            this.requests[id] = data.children[i].get("request")
+            tok = data.children[i].get("token").str()
+            this.tokens[id] = tok
+        }
+    }
+
+    //Returns interest over time chart data
+    //timeframe: 'date duration-unit' where:
+    //  -date:     today (str)
+    //  -duration: 12    (number)
+    //  -unit:     m/y/d (char)
+    //Example: "today 12-d" or "today 7-d"
+    interestOverTime(kw cpstring, cat int, resolution cpstring, timeframe cpstring) GT_timeline* {
+        gtreq = GT_payloadTokens{}
+        gtreq.comparisonItem[0] = new GL_payloadComparison {
+            keyword: kw
+            time: timeframe
+            geo: this.geo
+        }
+        this.getTokens(&gtreq)
+
+
+        gtfreq = GT_payloadOverTime{}
+
+        oreq = this.requests["TIMESERIES"]
+        
+        if oreq == null {
+            println("GT: Google returned empty response.")
+            return null
+        }
+        
+        oreq.scan(&gtfreq)
+
+        req = http_request {
+            timeout: 2
+            method: "GET"
+            url: parseUrl(GT_INT_OVER_TIME_URL+"?hl="+this.hl+"&tz="+intToStr(this.tz)+"&tz="+intToStr(this.tz)+"&req="+urlEncodePreserve(toJson(&gtfreq))+"&token="+this.tokens["TIMESERIES"])
+        }
+
+        req.setHeader("cookie", joinString(this.cookies, "; ").str())
+        req.setHeader("accept", "application/json, text/plain, */*")
+        req.setHeader("accept-language", this.hl)
+        req.setHeader("content-type", "application/json")
+        req.setHeader("Origin", "https://trends.google.com")
+        req.setHeader("Alt-Used", "trends.google.com")
+
+        resp = req.send()
+
+        data = parseJson(resp.body.str()[5:])
+
+        let deflt = data.get("default") else {
+            println("GT: Google returned wrong response.")
+            return null
+        }
+
+        r = new GT_timeline
+
+        
+
+        deflt.scan(r)
+
+        return r
+    }
+
+}

@@ -1,0 +1,79 @@
+//API url
+GT_BASE_URL = "https://trends.google.com/trends"
+GT_GENERAL_URL = GT_BASE_URL + "/api/explore"
+GT_INT_OVER_TIME_URL = GT_BASE_URL + "/api/widgetdata/multiline"
+
+//Comparison item payload for requesting tokens
+struct GL_payloadComparison {
+    keyword: cpstring
+    geo: cpstring
+    time: cpstring
+}
+
+//Payload used to request tokens
+struct GT_payloadTokens {
+    comparisonItem: []GL_payloadComparison*
+    category: int
+    property: cpstring
+}
+
+//Keyword descriptor
+struct GT_kw {
+    type: cpstring
+    value: cpstring
+}
+
+//Complex keyword restrictions
+struct GT_kwRstr {
+    keyword: []GT_kw*
+}
+
+//Geographic representation of request
+struct GT_geo {
+    country: cpstring
+}
+
+//Comparison items for data request
+struct GT_payloadComparisonComplex {
+    geo: GT_geo
+    complexKeywordsRestriction: GT_kwRstr
+}
+
+//User config (user type scrapper)
+struct GT_userConfig {
+    userType: cpstring
+}
+
+//Backend type
+struct GT_requestOptions {
+    property: cpstring
+    backend: cpstring
+    category: int
+}
+
+//Payload used to request data for timeline request
+struct GT_payloadOverTime {
+    comparisonItem: []GT_payloadComparisonComplex*
+    locale: cpstring
+    requestOptions: GT_requestOptions
+    resolution: cpstring
+    time: cpstring
+    userConfig: GT_userConfig
+}
+
+//A singular element of timeline response
+struct GT_timelineElem {
+    time: cpstring //timestamp
+    formattedTime: cpstring
+    formattedAxisTime: cpstring
+    value: []int
+    hasData: []bool
+    formattedValue: []cpstring
+    isPartial: bool
+}
+
+//Response containing data of timeline request
+struct GT_timeline {
+    timelineData: []GT_timelineElem*
+    //averages: ???
+}
