@@ -13,27 +13,29 @@ struct GT_trendRequest {
     tokens: map:cpstring
     requests: map:jsonElement*
 
+    initialized: bool
+
     //Used for making a new session (new cookie jar)
-    newSession() {
+    newSession() bool {
         req = http_request {
             timeout: 2
             url: parseUrl(GT_BASE_URL+"/?geo="+this.geo)
         }
-        resp = req.send()
+        let resp = req.send() else {
+            println("GT: unable to fetch cookies.")
+            return false
+        }
+
         
         this.cookies = splitString(
             string(splitStringBefore(string(resp.getHeader("set-cookie")), ";")),
             "&"
         )
-    }
-
-    //Initializer
-    _init() {
-        this.newSession()
+        return true
     }
 
     //Used for requesting tokens
-    getTokens(tp GT_payloadTokens*) {
+    getTokens(tp GT_payloadTokens*) bool {
         req = http_request {
             timeout: 2
             method: "GET"
@@ -42,14 +44,20 @@ struct GT_trendRequest {
         req.setHeader("cookie", joinString(this.cookies, "; ").str())
         req.setHeader("accept", "application/json, text/plain, */*")
         req.setHeader("accept-language", this.hl)
-        req.setHeader("content-type", "application/json")
+        req.setHeader("content-type", "application/json; charset=utf-8")
         req.setHeader("Origin", "https://trends.google.com")
         req.setHeader("Alt-Used", "trends.google.com")
 
+        let resp = req.send() else {
+            println("GT: unable to fetch tokens")
+            return false
+        }
 
-
-        resp = req.send()
-        data = parseJson(resp.body.str()[4:]).get("widgets")
+        let j = parseJson(resp.body.str()[4:]) else {
+            println("GT: unable to decipher tokens")
+            return false
+        }
+        data = j.get("widgets")
 
         i=0; for i < len(data.children), i++ {
             id = data.children[i].get("id").str()
@@ -57,6 +65,7 @@ struct GT_trendRequest {
             tok = data.children[i].get("token").str()
             this.tokens[id] = tok
         }
+        return true
     }
 
     //Returns interest over time chart data
@@ -66,13 +75,22 @@ struct GT_trendRequest {
     //  -unit:     m/y/d (char)
     //Example: "today 12-d" or "today 7-d"
     interestOverTime(kw cpstring, cat int, resolution cpstring, timeframe cpstring) GT_timeline* {
+        if this.initialized == false {
+            this.initialized = this.newSession()
+            if this.initialized == false {
+                println("GT: Could not fetch graph info, error while initializing GT.")
+                return null
+            }
+        }
         gtreq = GT_payloadTokens{}
         gtreq.comparisonItem[0] = new GL_payloadComparison {
             keyword: kw
             time: timeframe
             geo: this.geo
         }
-        this.getTokens(&gtreq)
+        if this.getTokens(&gtreq) == false {
+            return null
+        }
 
 
         gtfreq = GT_payloadOverTime{}
@@ -95,7 +113,7 @@ struct GT_trendRequest {
         req.setHeader("cookie", joinString(this.cookies, "; ").str())
         req.setHeader("accept", "application/json, text/plain, */*")
         req.setHeader("accept-language", this.hl)
-        req.setHeader("content-type", "application/json")
+        req.setHeader("content-type", "application/json; charset=utf-8")
         req.setHeader("Origin", "https://trends.google.com")
         req.setHeader("Alt-Used", "trends.google.com")
 

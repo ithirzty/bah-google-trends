@@ -4,7 +4,7 @@ uriPreserveChars = []char {';', '/', '?', ':', '@', '&', '=', '+', '-', '_', '$'
 //This will URI encode the correct chars.
 urlEncodePreserve(s cpstring) cpstring {
     r = []char
-    tmps = buffer 4
+    tmps = buffer 32
 
     i=0; for i < len(s), i++ {
         c = s[i]
