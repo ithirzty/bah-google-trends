@@ -1,6 +1,10 @@
 # Bah Google Trends API
 This library allows you to use the Google Trends API in Bah.
 
+```sh
+bpm -install ithirzty/bah-google-trends
+```
+
 ## Support
 Still a work in progress...
 - [x] Interest over time

@@ -5,12 +5,12 @@
 // .geo: the geographical zone (US, FR...)
 struct GT_trendRequest {
     tz: int = 0 //timezone in minutes
-    hl: cpstring = "fr" //language (en-US...)
-    geo: cpstring = "FR"
+    hl: str = "fr" //language (en-US...)
+    geo: str = "FR"
     
-    kw_list: []cpstring
+    kw_list: []str
     cookies: []string //session
-    tokens: map:cpstring
+    tokens: map:str
     requests: map:jsonElement*
 
     initialized: bool
@@ -21,7 +21,9 @@ struct GT_trendRequest {
             timeout: 2
             url: parseUrl(GT_BASE_URL+"/?geo="+this.geo)
         }
-        let resp = req.send() else {
+        resp = req.send()
+
+        if resp == null {
             println("GT: unable to fetch cookies.")
             return false
         }
@@ -48,12 +50,16 @@ struct GT_trendRequest {
         req.setHeader("Origin", "https://trends.google.com")
         req.setHeader("Alt-Used", "trends.google.com")
 
-        let resp = req.send() else {
+        resp = req.send() 
+        
+        if resp == null {
             println("GT: unable to fetch tokens")
             return false
         }
 
-        let j = parseJson(resp.body.str()[4:]) else {
+        j = parseJson(resp.body.str()[4:])
+        
+        if j == null {
             println("GT: unable to decipher tokens")
             return false
         }
@@ -74,7 +80,7 @@ struct GT_trendRequest {
     //  -duration: 12    (number)
     //  -unit:     m/y/d (char)
     //Example: "today 12-d" or "today 7-d"
-    interestOverTime(kw cpstring, cat int, resolution cpstring, timeframe cpstring) GT_timeline* {
+    interestOverTime(kw str, cat int, resolution str, timeframe str) GT_timeline* {
         if this.initialized == false {
             this.initialized = this.newSession()
             if this.initialized == false {
@@ -121,7 +127,9 @@ struct GT_trendRequest {
 
         data = parseJson(resp.body.str()[5:])
 
-        let deflt = data.get("default") else {
+        deflt = data.get("default")
+        
+        if deflt == null {
             println("GT: Google returned wrong response.")
             return null
         }

@@ -2,9 +2,8 @@
 uriPreserveChars = []char {';', '/', '?', ':', '@', '&', '=', '+', '-', '_', '$', ',', '#', '.', '!'}
 
 //This will URI encode the correct chars.
-urlEncodePreserve(s cpstring) cpstring {
+urlEncodePreserve(s str) str {
     r = []char
-    tmps = buffer 32
 
     i=0; for i < len(s), i++ {
         c = s[i]
@@ -12,9 +11,8 @@ urlEncodePreserve(s cpstring) cpstring {
             r[len(r)] = c
         } else {
             r[len(r)] = '%'
-            sprintf(<ptr>tmps, "%x", c)
-            l = strlen(<ptr>tmps)
-            j=0; for j < l, j++ {
+            tmps = uintToHex(<uint>c)
+            j=0; for j < len(tmps), j++ {
                 r[len(r)] = tmps[j]
             }
             

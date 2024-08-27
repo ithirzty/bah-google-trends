@@ -1,7 +1,1 @@
-{
-	"name": "ithirzty/bah-google-trends",
-	"url": "https://github.com/ithirzty/bah-google-trends",
-	"ver": 1.416600,
-	"deps": [
-]
-}
+{"name": "ithirzty/bah-google-trends", "url": "https://github.com/ithirzty/bah-google-trends", "ver": 1.51190, "deps": [], "syslibs": [], "bpmver": 0.10000}

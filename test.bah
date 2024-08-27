@@ -1,8 +1,8 @@
 #import "iostream.bah"
 #import "string.bah"
-#import "googleTrends.bah"
+#import "googleTrends.bah" // "ithirzty/bah-google-trends/googleTrends.bah" if installed from bpm
 
-main(args []cpstring) int {
+main(args []str) int {
 
     //Prepare session
     tr = GT_trendRequest{
